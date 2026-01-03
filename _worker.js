@@ -22,7 +22,8 @@ export default {
         const DEFAULT_ACHS = [{ id: 'ach-1', title: '荣誉之星', type: 'totalTasks', targetValue: 1, unlocked: false }];
         const DEFAULT_USER = {
             id: HARDCODED_USER_ID, name: '小英雄', level: 1, xp: 0, xpToNextLevel: 100, activeDays: 1,
-            lastLoginDate: ''
+            lastLoginDate: '',
+            frontendLogo: 'https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png'
         };
 
         const getKV = async (key, defaultValue) => {
@@ -109,10 +110,10 @@ export default {
     </style>
 </head>
 <body class="pb-32">
-    <header class="fixed top-0 inset-x-0 glass z-50 px-6 py-4 flex justify-between items-center max-w-4xl mx-auto md:rounded-b-[40px] shadow-sm">
+    <header class="fixed top-0 inset-x-0 glass z-50 px-6 py-4 flex justify-between items-center max-w-4xl mx-auto md:rounded-b-[40px] shadow-sm md:h-[120px]">
         <div class="flex items-center gap-3">
-            <div id="nav-pet-box" class="w-10 h-10 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">🐣</div>
-            <h1 class="text-xl font-bold">自律宝贝</h1>
+            <img id="header-logo" src="https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png" class="h-10 md:h-16 w-auto object-contain" alt="Logo" />
+            <h1 id="header-title" class="text-xl font-bold hidden md:block">自律宝贝</h1>
         </div>
         <button onclick="switchTab('settings')" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i data-lucide="settings" class="w-5 h-5"></i></button>
     </header>
@@ -206,6 +207,14 @@ export default {
              <h2 class="text-3xl font-bold text-gray-800">偏好设置</h2>
              <div class="bg-white p-8 rounded-[40px] border space-y-4">
                 <div class="space-y-1"><label class="text-xs font-bold text-gray-400">我的昵称</label><input id="set-name" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" placeholder="输入昵称" /></div>
+                <div class="space-y-1"><label class="text-xs font-bold text-gray-400">前端 Logo URL (600x200)</label>
+                    <div class="flex flex-col gap-3">
+                        <div class="w-full h-32 bg-gray-50 rounded-2xl border flex items-center justify-center overflow-hidden">
+                            <img id="set-logo-preview" src="" class="max-w-full max-h-full object-contain" />
+                        </div>
+                        <input id="set-logo-url" oninput="document.getElementById('set-logo-preview').src=this.value" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" placeholder="https://..." />
+                    </div>
+                </div>
                 <button onclick="saveUser()" class="w-full bg-rose-500 text-white py-4 rounded-3xl font-bold shadow-lg shadow-rose-100">保存修改</button>
              </div>
         </div>
@@ -317,6 +326,11 @@ export default {
              document.getElementById('stat-level').innerText = u.level;
              document.getElementById('stat-xp').innerText = u.xp;
              document.getElementById('stat-xp-max').innerText = u.xpToNextLevel;
+             if(u.frontendLogo) {
+                document.getElementById('header-logo').src = u.frontendLogo;
+                document.getElementById('set-logo-url').value = u.frontendLogo;
+                document.getElementById('set-logo-preview').src = u.frontendLogo;
+             }
 
              // Dashboard Tasks
              const tToday = tasks.filter(t => isToday(t));
@@ -548,8 +562,9 @@ export default {
 
         const saveUser = async () => {
              const name = document.getElementById('set-name').value;
+             const logo = document.getElementById('set-logo-url').value;
              if(!name) return;
-             state.user = await api('user', 'POST', { name });
+             state.user = await api('user', 'POST', { name, frontendLogo: logo });
              alert('保存成功！');
              render();
         };

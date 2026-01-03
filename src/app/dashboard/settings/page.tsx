@@ -290,11 +290,11 @@ export default function SettingsPage() {
               <Label htmlFor="appLogoUrl"><ClientOnlyT tKey='settings.profile.appLogo' /></Label>
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-lg border bg-muted overflow-hidden shrink-0">
+                  <div className="flex h-[200px] w-[200px] items-center justify-center rounded-lg border bg-muted overflow-hidden shrink-0">
                     {appLogo ? (
-                      <img src={appLogo} alt="Logo Preview" className="h-full w-full object-cover" />
+                      <img src={appLogo} alt="Logo Preview" className="h-full w-full object-contain" />
                     ) : (
-                      <span className="text-xs text-muted-foreground">Preview</span>
+                      <span className="text-xs text-muted-foreground">Preview (200x200)</span>
                     )}
                   </div>
                   <div className="flex-1 space-y-2">
@@ -327,11 +327,11 @@ export default function SettingsPage() {
               <Label htmlFor="frontendLogoUrl"><ClientOnlyT tKey='settings.appearance.frontendLogo' /></Label>
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-lg border bg-muted overflow-hidden shrink-0">
+                  <div className="flex h-[200px] w-[200px] items-center justify-center rounded-lg border bg-muted overflow-hidden shrink-0">
                     {frontendLogo ? (
-                      <img src={frontendLogo} alt="Frontend Logo Preview" className="h-full w-full object-cover" />
+                      <img src={frontendLogo} alt="Frontend Logo Preview" className="h-full w-full object-contain" />
                     ) : (
-                      <span className="text-xs text-muted-foreground">Preview</span>
+                      <span className="text-xs text-muted-foreground">Preview (200x200)</span>
                     )}
                   </div>
                   <div className="flex-1 space-y-2">

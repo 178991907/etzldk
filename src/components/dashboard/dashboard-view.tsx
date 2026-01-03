@@ -87,7 +87,7 @@ export default function DashboardView({
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
-            <header className="sticky top-0 z-10 flex flex-nowrap h-auto py-2 md:py-0 md:h-[120px] items-center justify-between bg-background/80 backdrop-blur-sm px-4 md:px-8 gap-2">
+            <header className="sticky top-0 z-10 flex flex-nowrap h-auto py-2 md:py-0 md:h-[220px] items-center justify-between bg-background/80 backdrop-blur-sm px-4 md:px-8 gap-2">
                 <div className="flex items-center gap-2 w-1/4 md:w-1/3">
                 </div>
                 <div className="flex justify-center items-center w-1/2 md:w-1/3 shrink-0">
@@ -95,28 +95,28 @@ export default function DashboardView({
                         <Image
                             src={user.frontendLogo}
                             alt="Frontend Logo"
-                            width={360}
-                            height={114}
+                            width={600}
+                            height={200}
                             priority
-                            className="object-contain w-[160px] h-auto md:w-[360px]"
+                            className="object-contain w-[160px] h-auto md:w-[600px]"
                         />
                     ) : user.appLogo ? (
                         <Image
                             src={user.appLogo}
                             alt="App Logo"
-                            width={360}
-                            height={114}
+                            width={600}
+                            height={200}
                             priority
-                            className="object-contain w-[160px] h-auto md:w-[360px]"
+                            className="object-contain w-[160px] h-auto md:w-[600px]"
                         />
                     ) : (
                         <Image
                             src="https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png"
                             alt="Logo"
-                            width={360}
-                            height={114}
+                            width={600}
+                            height={200}
                             priority
-                            className="object-contain w-[160px] h-auto md:w-[360px]"
+                            className="object-contain w-[160px] h-auto md:w-[600px]"
                         />
                     )}
                 </div>
