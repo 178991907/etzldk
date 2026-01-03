@@ -1,0 +1,13 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/",
+  "/dashboard/page": "/dashboard",
+  "/dashboard/pomodoro/page": "/dashboard/pomodoro",
+  "/dashboard/reports/page": "/dashboard/reports",
+  "/dashboard/tasks/page": "/dashboard/tasks",
+  "/test-css/page": "/test-css",
+  "/dashboard/rewards/page": "/dashboard/rewards",
+  "/dashboard/settings/page": "/dashboard/settings",
+  "/dashboard/achievements/page": "/dashboard/achievements"
+}

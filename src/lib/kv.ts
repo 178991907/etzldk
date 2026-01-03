@@ -7,18 +7,23 @@ export interface KVBinding {
 
 // Access the global Cloudflare Worker scope or process.env
 const getKVBinding = (): KVBinding | null => {
-    // In Cloudflare Workers, bindings are global variables or attached to the `env` object passed to the fetch handler.
-    // However, in Next.js via open-next, accessing bindings can be tricky depending on the deployment mode.
-    // Often they are exposed on `process.env` if using the nodejs_compat flag or specific presets.
-
-    // We'll try to look for a global variable named 'DISCIPLINE_KV' (user needs to bind this name).
-    // Or check process.env if injected.
-
-    if (typeof process !== 'undefined' && process.env && process.env.DISCIPLINE_KV) {
-        return process.env.DISCIPLINE_KV as unknown as KVBinding;
+    // In Cloudflare Workers, bindings are passed in the 'env' object.
+    // In many Next.js adapters (like open-next), they are exposed via process.env
+    // or as global variables.
+    
+    // Check for global 'KV' (standard Cloudflare Workers behavior)
+    // @ts-ignore
+    if (typeof KV !== 'undefined') {
+        // @ts-ignore
+        return KV as KVBinding;
     }
 
-    // In some open-next configurations, bindings might be on the global scope
+    // Check process.env.KV (common in adapters and nodejs_compat)
+    if (typeof process !== 'undefined' && process.env && process.env.KV) {
+        return process.env.KV as unknown as KVBinding;
+    }
+
+    // Check for the previous naming if applicable (fallback)
     // @ts-ignore
     if (typeof DISCIPLINE_KV !== 'undefined') {
         // @ts-ignore

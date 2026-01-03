@@ -1,0 +1,13 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/pomodoro/page": "app/dashboard/pomodoro/page.js",
+  "/dashboard/reports/page": "app/dashboard/reports/page.js",
+  "/dashboard/tasks/page": "app/dashboard/tasks/page.js",
+  "/test-css/page": "app/test-css/page.js",
+  "/dashboard/rewards/page": "app/dashboard/rewards/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js",
+  "/dashboard/achievements/page": "app/dashboard/achievements/page.js"
+}
