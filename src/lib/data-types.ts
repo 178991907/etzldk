@@ -57,6 +57,8 @@ export type User = {
   petName: string;
   appLogo?: string;
   frontendLogo?: string;
+  activeDays?: number;
+  lastLoginDate?: string;
   pomodoroSettings?: PomodoroSettings;
   // White-labeling and content configuration
   appName: string;
