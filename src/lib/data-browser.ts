@@ -73,7 +73,11 @@ const mapDbUserToAppUser = (user: any): User => {
         ? JSON.parse(user.pomodoroSettings)
         : (user.pomodoroSettings || defaultPomodoroSettings);
 
-    return { ...user, pomodoroSettings: parsedPomodoroSettings };
+    return {
+        ...getDefaultUser(), // Start with defaults to ensure all fields exist
+        ...user,
+        pomodoroSettings: parsedPomodoroSettings
+    };
 };
 
 export async function getUser(): Promise<User> {
@@ -121,17 +125,30 @@ export async function updateUser(newUserData: Partial<Omit<User, 'id'>>) {
             await kv.put(`user:${HARDCODED_USER_ID}`, updatedUser);
             return;
         }
-        // Cannot update in server memory only
         return;
     }
     try {
-        const dataToUpdate: { [key: string]: any } = { ...newUserData };
+        const dataToUpdate: any = {};
+        // Explicitly map keys to be safe
+        if (newUserData.name !== undefined) dataToUpdate.name = newUserData.name;
+        if (newUserData.avatar !== undefined) dataToUpdate.avatar = newUserData.avatar;
+        if (newUserData.level !== undefined) dataToUpdate.level = newUserData.level;
+        if (newUserData.xp !== undefined) dataToUpdate.xp = newUserData.xp;
+        if (newUserData.xpToNextLevel !== undefined) dataToUpdate.xpToNextLevel = newUserData.xpToNextLevel;
+        if (newUserData.petStyle !== undefined) dataToUpdate.petStyle = newUserData.petStyle;
+        if (newUserData.petName !== undefined) dataToUpdate.petName = newUserData.petName;
+        if (newUserData.appLogo !== undefined) dataToUpdate.appLogo = newUserData.appLogo;
+        if (newUserData.frontendLogo !== undefined) dataToUpdate.frontendLogo = newUserData.frontendLogo;
+        if (newUserData.activeDays !== undefined) dataToUpdate.activeDays = newUserData.activeDays;
+        if (newUserData.lastLoginDate !== undefined) dataToUpdate.lastLoginDate = newUserData.lastLoginDate;
+        if (newUserData.appName !== undefined) dataToUpdate.appName = newUserData.appName;
         if (newUserData.pomodoroSettings) {
             dataToUpdate.pomodoroSettings = JSON.stringify(newUserData.pomodoroSettings);
         }
+
         await db.update(users).set(dataToUpdate).where(eq(users.id, HARDCODED_USER_ID));
     } catch (error) {
-        console.error("Failed to update user in DB", error);
+        console.error("Failed to update user in DB. This may be due to missing columns in your database table. Error:", error);
         throw error;
     }
 }

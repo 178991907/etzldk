@@ -88,32 +88,41 @@ export default function SettingsPage() {
   };
 
   const handleSaveChanges = async () => {
-    const { getStorageStatus } = await import('@/lib/data-browser');
-    const status = await getStorageStatus();
+    try {
+      const { getStorageStatus } = await import('@/lib/data-browser');
+      const status = await getStorageStatus();
 
-    const newUserData = {
-      name: name,
-      petName: petName,
-      avatar: selectedAvatar,
-      petStyle: selectedPet,
-      appLogo: appLogo,
-      frontendLogo: frontendLogo,
-    };
+      const newUserData = {
+        name: name,
+        petName: petName,
+        avatar: selectedAvatar,
+        petStyle: selectedPet,
+        appLogo: appLogo,
+        frontendLogo: frontendLogo,
+      };
 
-    if (status === 'db' || status === 'kv') {
-      const { updateUser } = await import('@/lib/data-browser');
-      await updateUser(newUserData);
-    } else {
-      const { updateClientUser } = await import('@/lib/client-data');
-      await updateClientUser(newUserData);
+      if (status === 'db' || status === 'kv') {
+        const { updateUser } = await import('@/lib/data-browser');
+        await updateUser(newUserData);
+      } else {
+        const { updateClientUser } = await import('@/lib/client-data');
+        await updateClientUser(newUserData);
+      }
+
+      toast({
+        title: t('settings.profile.saveSuccessTitle'),
+        description: t('settings.profile.saveSuccessDescription'),
+      });
+      // Trigger a manual refresh of user data everywhere
+      window.dispatchEvent(new CustomEvent('userProfileUpdated'));
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "保存失败 (Save Failed)",
+        description: "数据库更新失败，请检查数据库连接或字段是否存在。 (Database update failed.)",
+        variant: "destructive",
+      });
     }
-
-    toast({
-      title: t('settings.profile.saveSuccessTitle'),
-      description: t('settings.profile.saveSuccessDescription'),
-    });
-    // Trigger a manual refresh of user data everywhere
-    window.dispatchEvent(new CustomEvent('userProfileUpdated'));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

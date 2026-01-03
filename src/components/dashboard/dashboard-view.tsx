@@ -91,7 +91,7 @@ export default function DashboardView({
                 <div className="flex items-center gap-2 w-1/4 md:w-1/3">
                 </div>
                 <div className="flex justify-center items-center w-1/2 md:w-1/3 shrink-0">
-                    {user.frontendLogo ? (
+                    {user.frontendLogo && user.frontendLogo !== '' && !user.frontendLogo.startsWith('https://...') ? (
                         <Image
                             src={user.frontendLogo}
                             alt="Frontend Logo"
