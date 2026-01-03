@@ -31,7 +31,23 @@ export default function DashboardPage() {
   useEffect(() => {
     setIsClient(true);
     const loadData = async () => {
-      const [userData, tasksData] = await Promise.all([getUser(), getTasks()]);
+      // Dynamic import to avoid server-action issues in client component if not used carefully
+      // But actually, we need to check storage status first.
+      // Since `getStorageStatus` is a server action, we can import it.
+      const { getStorageStatus } = await import('@/lib/data-browser');
+      const status = await getStorageStatus();
+
+      let userData: User | null = null;
+      let tasksData: Task[] = [];
+
+      if (status === 'db' || status === 'kv') {
+        const { getUser, getTasks } = await import('@/lib/data-browser');
+        [userData, tasksData] = await Promise.all([getUser(), getTasks()]);
+      } else {
+        const { getClientUser, getClientTasks } = await import('@/lib/client-data');
+        [userData, tasksData] = await Promise.all([getClientUser(), getClientTasks()]);
+      }
+
       setUser(userData);
       setTasks(tasksData);
     };

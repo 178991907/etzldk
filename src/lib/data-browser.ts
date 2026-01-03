@@ -10,6 +10,14 @@ import { kv } from './kv';
 // --- Constants ---
 const HARDCODED_USER_ID = 'user_2fP7sW5gR8zX9yB1eA6vC4jK0lM';
 
+export async function getStorageStatus() {
+    if (dbInitializationError) {
+        if (kv.isAvailable()) return 'kv';
+        return 'local';
+    }
+    return 'db';
+}
+
 const defaultPomodoroSettings: PomodoroSettings = {
     modes: [
         { id: 'work', name: 'Work', duration: 25 },

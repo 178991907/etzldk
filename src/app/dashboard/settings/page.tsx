@@ -39,7 +39,20 @@ export default function SettingsPage() {
   const { toast } = useToast();
 
   const handleUserUpdate = async () => {
-    const user = await getUser();
+    // Check storage mode first
+    const { getStorageStatus } = await import('@/lib/data-browser');
+    const status = await getStorageStatus();
+
+    let user: User | null = null;
+
+    if (status === 'db' || status === 'kv') {
+      const { getUser } = await import('@/lib/data-browser');
+      user = await getUser();
+    } else {
+      const { getClientUser } = await import('@/lib/client-data');
+      user = await getClientUser();
+    }
+
     setCurrentUser(user);
     if (user) {
       setName(user.name);
@@ -75,14 +88,25 @@ export default function SettingsPage() {
   };
 
   const handleSaveChanges = async () => {
-    await updateUser({
+    const { getStorageStatus } = await import('@/lib/data-browser');
+    const status = await getStorageStatus();
+
+    const newUserData = {
       name: name,
       petName: petName,
       avatar: selectedAvatar,
       petStyle: selectedPet,
       appLogo: appLogo,
       frontendLogo: frontendLogo,
-    });
+    };
+
+    if (status === 'db' || status === 'kv') {
+      const { updateUser } = await import('@/lib/data-browser');
+      await updateUser(newUserData);
+    } else {
+      const { updateClientUser } = await import('@/lib/client-data');
+      await updateClientUser(newUserData);
+    }
 
     toast({
       title: t('settings.profile.saveSuccessTitle'),
