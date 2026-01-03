@@ -21,15 +21,25 @@ export default function AchievementsPage() {
 
   useEffect(() => {
     const fetchAchievements = async () => {
-      const loadedAchievements = await getAchievements();
+      const { getStorageStatus } = await import('@/lib/data-browser');
+      const status = await getStorageStatus();
+      let loadedAchievements: Achievement[] = [];
+
+      if (status === 'db' || status === 'kv') {
+        const { getAchievements } = await import('@/lib/data-browser');
+        loadedAchievements = await getAchievements();
+      } else {
+        const { getClientAchievements } = await import('@/lib/client-data');
+        loadedAchievements = await getClientAchievements();
+      }
       setAchievements(loadedAchievements);
       setIsClient(true);
     };
     fetchAchievements();
 
     const handleAchievementsUpdate = async () => {
-      const updatedAchievements = await getAchievements();
-      setAchievements(updatedAchievements);
+      // Re-fetch using logic above
+      fetchAchievements();
     };
 
     window.addEventListener('achievementsUpdated', handleAchievementsUpdate);
@@ -55,7 +65,19 @@ export default function AchievementsPage() {
   const handleDeleteConfirm = async () => {
     if (deletingAchievement) {
       const updated = achievements.filter(a => a.id !== deletingAchievement.id);
-      await updateAchievements(updated);
+
+      const { getStorageStatus } = await import('@/lib/data-browser');
+      const status = await getStorageStatus();
+
+      if (status === 'db' || status === 'kv') {
+        const { updateAchievements: updateDbAchievements } = await import('@/lib/data-browser');
+        await updateDbAchievements(updated);
+      } else {
+        const { updateClientAchievements } = await import('@/lib/client-data');
+        await updateClientAchievements(updated);
+      }
+
+      setAchievements(updated); // Optimistic update
       setDeletingAchievement(null);
     }
   };
@@ -70,7 +92,19 @@ export default function AchievementsPage() {
         a.id === savedAchievement.id ? savedAchievement : a
       );
     }
-    await updateAchievements(updatedAchievements);
+
+    const { getStorageStatus } = await import('@/lib/data-browser');
+    const status = await getStorageStatus();
+
+    if (status === 'db' || status === 'kv') {
+      const { updateAchievements: updateDbAchievements } = await import('@/lib/data-browser');
+      await updateDbAchievements(updatedAchievements);
+    } else {
+      const { updateClientAchievements } = await import('@/lib/client-data');
+      await updateClientAchievements(updatedAchievements);
+    }
+
+    setAchievements(updatedAchievements); // Optimistic update
   };
 
   const unlockedCount = achievements.filter(a => a.unlocked).length;

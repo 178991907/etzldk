@@ -138,6 +138,34 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSyncData = async () => {
+    try {
+      toast({ title: "Syncing...", description: "Uploading data to the server." });
+
+      const { getClientUser, getClientTasks, getClientAchievements, getClientRewards } = await import('@/lib/client-data');
+      const [lUser, lTasks, lAchievements, lRewards] = await Promise.all([
+        getClientUser(),
+        getClientTasks(),
+        getClientAchievements(),
+        getClientRewards()
+      ]);
+
+      const { syncLocalDataToDb } = await import('@/lib/data-browser');
+      const result = await syncLocalDataToDb(lUser, lTasks, lAchievements, lRewards);
+
+      if (result.success) {
+        toast({ title: "Sync Complete", description: "Your local data has been saved to the database." });
+        // Force refresh to now fetch from DB?
+        handleUserUpdate();
+      } else {
+        toast({ title: "Sync Failed", description: result.error, variant: "destructive" });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error", description: "Unexpected error during sync.", variant: "destructive" });
+    }
+  };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -337,6 +365,26 @@ export default function SettingsPage() {
           </CardFooter>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle><ClientOnlyT tKey='settings.sync.title' /></CardTitle>
+            <CardDescription><ClientOnlyT tKey='settings.sync.description' /></CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium"><ClientOnlyT tKey='settings.sync.uploadLabel' /></p>
+                <p className="text-sm text-muted-foreground">
+                  <ClientOnlyT tKey='settings.sync.uploadInfo' />
+                </p>
+              </div>
+              <Button onClick={handleSyncData} variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                <ClientOnlyT tKey='settings.sync.uploadButton' />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

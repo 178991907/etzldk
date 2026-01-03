@@ -27,16 +27,30 @@ export default function RewardsPage() {
 
   useEffect(() => {
     const fetchRewards = async () => {
-      const { getClientRewards } = await import('@/lib/client-data');
-      const allRewards = await getClientRewards();
+      const { getStorageStatus } = await import('@/lib/data-browser');
+      const status = await getStorageStatus();
+      let allRewards: Reward[] = [];
+
+      if (status === 'db' || status === 'kv') {
+        const { getRewards } = await import('@/lib/data-browser');
+        allRewards = await getRewards();
+      } else {
+        const { getClientRewards } = await import('@/lib/client-data');
+        allRewards = await getClientRewards();
+      }
       setRewards(allRewards);
       setIsClient(true);
     };
 
     fetchRewards();
 
-    const handleUpdate = () => fetchRewards();
+    const handleUpdate = () => {
+      // Simple re-fetch for now, though ideally we'd pass data in event
+      fetchRewards();
+    };
     window.addEventListener('rewards-v1Updated', handleUpdate);
+    // We might need a new event for DB updates if we want real-time sync, but page reload works.
+
     return () => {
       window.removeEventListener('rewards-v1Updated', handleUpdate);
     };
@@ -77,8 +91,11 @@ export default function RewardsPage() {
   const handleSaveReward = async () => {
     if (!newRewardName.trim()) return;
 
+    const { getStorageStatus } = await import('@/lib/data-browser');
+    const status = await getStorageStatus();
+    const useDb = status === 'db' || status === 'kv';
+
     if (editingReward) {
-      const { updateClientReward } = await import('@/lib/client-data');
       const updatedReward: Reward = {
         ...editingReward,
         title: newRewardName.trim(),
@@ -86,11 +103,17 @@ export default function RewardsPage() {
         tasksRequired: newTasksRequired ? parseInt(newTasksRequired, 10) : undefined,
         daysRequired: newDaysRequired ? parseInt(newDaysRequired, 10) : undefined,
       };
-      await updateClientReward(updatedReward);
+
+      if (useDb) {
+        const { updateReward } = await import('@/lib/data-browser');
+        await updateReward(updatedReward);
+      } else {
+        const { updateClientReward } = await import('@/lib/client-data');
+        await updateClientReward(updatedReward);
+      }
     } else {
-      const { addClientReward } = await import('@/lib/client-data');
       const newReward: Reward = {
-        id: `reward-custom-${Date.now()}`,
+        id: `reward-${Date.now()}`, // DB will ignore this usually but good for local
         userId: 'user_2fP7sW5gR8zX9yB1eA6vC4jK0lM',
         title: newRewardName.trim(),
         description: newRewardDescription.trim(),
@@ -98,7 +121,14 @@ export default function RewardsPage() {
         tasksRequired: newTasksRequired ? parseInt(newTasksRequired, 10) : undefined,
         daysRequired: newDaysRequired ? parseInt(newDaysRequired, 10) : undefined,
       };
-      await addClientReward(newReward);
+
+      if (useDb) {
+        const { addReward } = await import('@/lib/data-browser');
+        await addReward(newReward);
+      } else {
+        const { addClientReward } = await import('@/lib/client-data');
+        await addClientReward(newReward);
+      }
     }
 
     setNewRewardName('');
@@ -107,11 +137,37 @@ export default function RewardsPage() {
     setNewDaysRequired('');
     setIsDialogOpen(false);
     setEditingReward(null);
+
+    // Refresh list
+    const { getStorageStatus: getStatus } = await import('@/lib/data-browser');
+    const currentStatus = await getStatus();
+    if (currentStatus === 'db' || currentStatus === 'kv') {
+      const { getRewards } = await import('@/lib/data-browser');
+      const allRewards = await getRewards();
+      setRewards(allRewards);
+    } else {
+      const { getClientRewards } = await import('@/lib/client-data');
+      const allRewards = await getClientRewards();
+      setRewards(allRewards);
+    }
   };
 
   const handleDeleteReward = async (idToDelete: string) => {
-    const { deleteClientReward } = await import('@/lib/client-data');
-    await deleteClientReward(idToDelete);
+    const { getStorageStatus } = await import('@/lib/data-browser');
+    const status = await getStorageStatus();
+
+    if (status === 'db' || status === 'kv') {
+      const { deleteReward } = await import('@/lib/data-browser');
+      await deleteReward(idToDelete);
+      // Refresh list
+      const { getRewards } = await import('@/lib/data-browser');
+      const allRewards = await getRewards();
+      setRewards(allRewards);
+    } else {
+      const { deleteClientReward } = await import('@/lib/client-data');
+      await deleteClientReward(idToDelete);
+      // Event listener handles refresh for local
+    }
   };
 
   if (!isClient) {

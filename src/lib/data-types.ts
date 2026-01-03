@@ -74,6 +74,7 @@ export type Reward = {
   icon: string;
   tasksRequired?: number;
   daysRequired?: number;
+  isCustom?: boolean;
 };
 
 export const iconMap: { [key: string]: LucideIcon } = {

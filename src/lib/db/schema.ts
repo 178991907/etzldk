@@ -19,27 +19,38 @@ export const users = pgTable('users', {
 });
 
 export const tasks = pgTable('tasks', {
-    id: serial('id').primaryKey(),
-    userId: text('user_id').notNull().references(() => users.id),
-    title: text('title').notNull(),
-    category: text('category').notNull(),
-    difficulty: text('difficulty').notNull(),
-    completed: boolean('completed').default(false).notNull(),
-    status: text('status', { enum: ['active', 'paused'] }).default('active').notNull(),
-    dueDate: timestamp('due_date').notNull(),
-    recurrence: jsonb('recurrence'),
-    time: text('time'),
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  title: text('title').notNull(),
+  category: text('category').notNull(),
+  difficulty: text('difficulty').notNull(),
+  completed: boolean('completed').default(false).notNull(),
+  status: text('status', { enum: ['active', 'paused'] }).default('active').notNull(),
+  dueDate: timestamp('due_date').notNull(),
+  recurrence: jsonb('recurrence'),
+  time: text('time'),
 });
 
 export const achievements = pgTable('achievements', {
-    id: serial('id').primaryKey(),
-    userId: text('user_id').notNull().references(() => users.id),
-    title: text('title').notNull(),
-    description: text('description'),
-    icon: text('icon').notNull(),
-    imageUrl: text('image_url'),
-    unlocked: boolean('unlocked').default(false).notNull(),
-    dateUnlocked: timestamp('date_unlocked'),
-    tasksRequired: integer('tasks_required'),
-    daysRequired: integer('days_required'),
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  icon: text('icon').notNull(),
+  imageUrl: text('image_url'),
+  unlocked: boolean('unlocked').default(false).notNull(),
+  dateUnlocked: timestamp('date_unlocked'),
+  tasksRequired: integer('tasks_required'),
+  daysRequired: integer('days_required'),
+});
+
+export const rewards = pgTable('rewards', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  icon: text('icon').notNull(),
+  tasksRequired: integer('tasks_required'),
+  daysRequired: integer('days_required'),
+  isCustom: boolean('is_custom').default(true),
 });

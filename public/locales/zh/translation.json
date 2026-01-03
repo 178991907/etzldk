@@ -366,6 +366,13 @@
       "title": "外观自定义",
       "description": "个性化您应用的外观，包括标志等。",
       "frontendLogo": "前端页面 Logo"
+    },
+    "sync": {
+      "title": "数据同步",
+      "description": "管理您的数据存储和云端同步。",
+      "uploadLabel": "上传本地数据",
+      "uploadInfo": "将浏览器中的本地数据迁移至服务器数据库。",
+      "uploadButton": "同步到云端"
     }
   },
   "user": {

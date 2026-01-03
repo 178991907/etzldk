@@ -1,11 +1,12 @@
 'use server';
 
 import { db, dbInitializationError } from '@/lib/db';
-import { users, tasks as tasksSchema, achievements as achievementsSchema } from '@/lib/db/schema';
+import { users, tasks as tasksSchema, achievements as achievementsSchema, rewards as rewardsSchema } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import type { User, Task, Achievement, PomodoroSettings } from './data-types';
+import type { User, Task, Achievement, Reward, PomodoroSettings } from './data-types';
 import { calculateNewXpAndLevel, isTaskForToday } from './logic';
 import { kv } from './kv';
+import { getDefaultRewards } from './client-data';
 
 // --- Constants ---
 const HARDCODED_USER_ID = 'user_2fP7sW5gR8zX9yB1eA6vC4jK0lM';
@@ -358,6 +359,182 @@ export async function getTodaysTasks(): Promise<Task[] | undefined> {
     }
 }
 
-// Re-export specific client utils only to break old imports if any, 
-// OR we can just remove them and fix imports in files.
-// Ideally, files should import from client-data.ts now.
+
+// --- Rewards Data ---
+
+const mapDbRewardToAppReward = (r: any): Reward => ({
+    ...r,
+    id: r.id.toString(),
+});
+
+export async function getRewards(): Promise<Reward[]> {
+    if (dbInitializationError) {
+        if (kv.isAvailable()) {
+            const kvRewards = await kv.get(`rewards:${HARDCODED_USER_ID}`);
+            if (kvRewards) return kvRewards;
+            const defaultRewards = getDefaultRewards();
+            await kv.put(`rewards:${HARDCODED_USER_ID}`, defaultRewards);
+            return defaultRewards;
+        }
+        return getDefaultRewards();
+    }
+    try {
+        let userRewards = await db.query.rewards.findMany({ where: eq(rewardsSchema.userId, HARDCODED_USER_ID) });
+        if (userRewards.length === 0) {
+            const defaultRewards = getDefaultRewards().map(r => ({
+                ...r,
+                userId: HARDCODED_USER_ID,
+            }));
+            // @ts-ignore
+            await db.insert(rewardsSchema).values(defaultRewards);
+            userRewards = await db.query.rewards.findMany({ where: eq(rewardsSchema.userId, HARDCODED_USER_ID) });
+        }
+        return userRewards.map(mapDbRewardToAppReward);
+    } catch (error) {
+        console.error("DB Error: Failed to fetch rewards. Falling back.", error);
+        return getDefaultRewards();
+    }
+}
+
+export async function addReward(reward: Reward) {
+    if (dbInitializationError) {
+        if (kv.isAvailable()) {
+            const rewards = await kv.get(`rewards:${HARDCODED_USER_ID}`) || getDefaultRewards();
+            rewards.push(reward);
+            await kv.put(`rewards:${HARDCODED_USER_ID}`, rewards);
+            return;
+        }
+        return;
+    }
+    try {
+        const rewardToInsert = { ...reward, userId: HARDCODED_USER_ID };
+        // @ts-ignore
+        await db.insert(rewardsSchema).values(rewardToInsert);
+    } catch (error) {
+        console.error("Failed to add reward to DB", error);
+        throw error;
+    }
+}
+
+export async function updateReward(reward: Reward) {
+    if (dbInitializationError) {
+        if (kv.isAvailable()) {
+            let rewards = await kv.get(`rewards:${HARDCODED_USER_ID}`) || getDefaultRewards();
+            rewards = rewards.map((r: Reward) => r.id === reward.id ? reward : r);
+            await kv.put(`rewards:${HARDCODED_USER_ID}`, rewards);
+            return;
+        }
+        return;
+    }
+    try {
+        await db.update(rewardsSchema)
+            .set({
+                title: reward.title,
+                description: reward.description,
+                tasksRequired: reward.tasksRequired,
+                daysRequired: reward.daysRequired
+            })
+            .where(eq(rewardsSchema.id, reward.id));
+    } catch (error) {
+        console.error("Failed to update reward in DB", error);
+        throw error;
+    }
+}
+
+export async function deleteReward(rewardId: string) {
+    if (dbInitializationError) {
+        if (kv.isAvailable()) {
+            let rewards = await kv.get(`rewards:${HARDCODED_USER_ID}`) || getDefaultRewards();
+            rewards = rewards.filter((r: Reward) => r.id !== rewardId);
+            await kv.put(`rewards:${HARDCODED_USER_ID}`, rewards);
+            return;
+        }
+        return;
+    }
+    try {
+        await db.delete(rewardsSchema).where(eq(rewardsSchema.id, rewardId));
+    } catch (error) {
+        console.error("Failed to delete reward from DB", error);
+        throw error;
+    }
+}
+
+
+export async function syncLocalDataToDb(
+    paramUser: User,
+    paramTasks: Task[],
+    paramAchievements: Achievement[],
+    paramRewards: Reward[]
+) {
+    if (dbInitializationError) {
+        return { success: false, error: "Database connection is not available." };
+    }
+
+    console.log("Starting data sync...");
+
+    try {
+        // 1. Sync User
+        const userData: any = { ...paramUser };
+        delete userData.id;
+        if (userData.pomodoroSettings) {
+            userData.pomodoroSettings = JSON.stringify(userData.pomodoroSettings);
+        }
+        await db.update(users).set(userData).where(eq(users.id, HARDCODED_USER_ID));
+        console.log("User synced.");
+
+        // 2. Sync Tasks
+        await db.delete(tasksSchema).where(eq(tasksSchema.userId, HARDCODED_USER_ID));
+        if (paramTasks.length > 0) {
+            const tasksToInsert = paramTasks.map(t => ({
+                userId: HARDCODED_USER_ID,
+                title: t.title,
+                category: t.category,
+                difficulty: t.difficulty,
+                completed: t.completed,
+                status: t.status,
+                dueDate: new Date(t.dueDate),
+                recurrence: t.recurrence ? JSON.stringify(t.recurrence) : null,
+                time: t.time
+            }));
+            await db.insert(tasksSchema).values(tasksToInsert as any);
+        }
+
+        // 3. Sync Achievements
+        await db.delete(achievementsSchema).where(eq(achievementsSchema.userId, HARDCODED_USER_ID));
+        if (paramAchievements.length > 0) {
+            const achievementsToInsert = paramAchievements.map(a => ({
+                userId: HARDCODED_USER_ID,
+                title: a.title,
+                description: a.description,
+                icon: a.icon,
+                imageUrl: a.imageUrl,
+                unlocked: a.unlocked,
+                dateUnlocked: a.dateUnlocked ? new Date(a.dateUnlocked) : null,
+                tasksRequired: a.tasksRequired,
+                daysRequired: a.daysRequired
+            }));
+            await db.insert(achievementsSchema).values(achievementsToInsert as any);
+        }
+
+        // 4. Sync Rewards
+        await db.delete(rewardsSchema).where(eq(rewardsSchema.userId, HARDCODED_USER_ID));
+        if (paramRewards.length > 0) {
+            const rewardsToInsert = paramRewards.map(r => ({
+                id: r.id,
+                userId: HARDCODED_USER_ID,
+                title: r.title,
+                description: r.description,
+                icon: r.icon,
+                tasksRequired: r.tasksRequired,
+                daysRequired: r.daysRequired,
+                isCustom: r.isCustom
+            }));
+            await db.insert(rewardsSchema).values(rewardsToInsert);
+        }
+
+        return { success: true };
+    } catch (e) {
+        console.error("Sync failed:", e);
+        return { success: false, error: (e as Error).message };
+    }
+}

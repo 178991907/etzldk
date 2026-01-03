@@ -365,6 +365,13 @@
       "daysToComplete": "{{count}} consecutive days to complete",
       "tasksAndDaysToComplete": "{{tasksCount}} tasks & {{daysCount}} days to complete",
       "noRequirement": "No specific requirement"
+    },
+    "sync": {
+      "title": "Data Synchronization",
+      "description": "Manage your data storage and cloud sync.",
+      "uploadLabel": "Upload Local Data",
+      "uploadInfo": "Migrate your browser data to the server database.",
+      "uploadButton": "Sync to Cloud"
     }
   },
   "notifications": {
