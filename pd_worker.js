@@ -43,7 +43,7 @@ export default {
         <button onclick="switchTab('settings')" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i data-lucide="settings" class="w-5 h-5"></i></button>
     </header>
 
-    <main class="mt-28 px-4 max-w-4xl mx-auto space-y-6">
+    <main class="mt-36 px-4 max-w-4xl mx-auto space-y-6">
         <!-- Dashboard -->
         <div id="tab-dashboard" class="tab-view space-y-6">
             <div class="bg-gradient-to-br from-rose-500 to-orange-400 p-8 rounded-[40px] shadow-2xl text-white flex flex-col md:flex-row items-center gap-8">
